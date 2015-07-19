@@ -16,12 +16,11 @@ set obtained from an activity monitor (such as Fitbit, Nike Fuelband, or other s
 
 Please note that the data set was manually downloaded and the data file manually extracted from the downloaded zip file into the working directory.  Also, within the data set any missing step data was coded as NA.  Each section below addresses the specific portions of the assignment.  The data set was read into R using the following code:
 
-```{r}
 
+```r
 setwd("~/Reproducable Research/Project 1")
 
 raw_data <- read.csv("activity.csv", header = TRUE)
-
 ```
 
 All of the subsequent data manipulation and calculations are detailed within the respective section of the assignment.
@@ -37,31 +36,56 @@ For this part three tasks needed to be addressed (it was also acceptable to remo
 
 The following first calculates the number of steps per day and then creates the histogram plot.
 
-```{r}
 
+```r
 library(dplyr)
+```
 
+```
+## 
+## Attaching package: 'dplyr'
+## 
+## The following object is masked from 'package:stats':
+## 
+##     filter
+## 
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 daily_summary <- summarise(group_by(raw_data, date), 
                            tot_steps = sum(steps, na.rm = TRUE))
 
 hist(daily_summary$tot_steps, col = "blue",
      main = "Frequency of the Number of Steps Taken per Day",
      xlab = "Steps per Day")
-
 ```
+
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2-1.png) 
 
 The mean and median are then calculated using this code.
 
-```{r}
 
+```r
 step_mean <- mean(daily_summary$tot_steps)
 
 step_median <- median(daily_summary$tot_steps)
 
 step_mean
+```
 
+```
+## [1] 9354.23
+```
+
+```r
 step_median
+```
 
+```
+## [1] 10395
 ```
 
 ###Part 2 - What is the average daily activity pattern?
@@ -70,8 +94,8 @@ This part required that a time series plot of the 5-minute interval and the aver
 
 The code below calculates the mean step values grouped by time interval and then creates a line plot of the data.
 
-```{r}
 
+```r
 per_summary <- summarise(group_by(raw_data, interval), 
                          tot_steps = sum(steps, na.rm = TRUE),
                          mean_steps = mean(steps, na.rm = TRUE))
@@ -79,17 +103,24 @@ per_summary <- summarise(group_by(raw_data, interval),
 plot(mean_steps ~ interval, data = per_summary, type = "l", 
      main = "Average Steps per Time Interval",
      xlab = "Time Interval", ylab = "Average Steps")
-
 ```
+
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
 
 The max average number of steps and the associated time interval are determined using the following:
 
-```{r}
 
+```r
 max_step_row <- which(per_summary[,3] == max(per_summary$mean_steps))
 
 per_summary[max_step_row,1]
+```
 
+```
+## Source: local data frame [1 x 1]
+## 
+##   interval
+## 1      835
 ```
 
 ###Part 3 - Inputing missing values.
@@ -105,40 +136,55 @@ This part required that the following things be accomplished:
 
 The total number of NA values in the original data set is:
 
-```{r}
 
+```r
 sum(is.na(raw_data$steps))
+```
 
+```
+## [1] 2304
 ```
 
 These values were then replaced with the average value per time period across the entire data set. 
 
-```{r}
 
+```r
 raw_data2 <- mutate(raw_data, steps = replace(raw_data$steps, 
                     is.na(raw_data$steps), per_summary$mean_steps))
-
 ```
 
 The revised histogram, mean step value, and median step value were then created /calculated.
 
-```{r}
 
+```r
 daily_summary2 <- summarise(group_by(raw_data2, date), 
                            tot_steps = sum(steps))
 
 hist(daily_summary2$tot_steps, col = "blue", 
      main = "Revised Frequency of the Number of Steps Taken per Day",
      xlab = "Steps per Day")
+```
 
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png) 
+
+```r
 step_mean2 <- mean(daily_summary2$tot_steps)
 
 step_median2 <- median(daily_summary2$tot_steps)
 
 step_mean2
+```
 
+```
+## [1] 10766.19
+```
+
+```r
 step_median2
+```
 
+```
+## [1] 10766.19
 ```
 
 Replacing the NA values in the original data set caused a change in both the mean and median values.  The revised data set mean for the total number of steps per day increased by 1412 steps compared to the original data set (original mean = 9354 steps, revised mean = 10766 steps).  Similarly, the median value for the revised data set increased by 371 steps per day (original median = 10395 steps, revised median = 10766 steps).
@@ -149,8 +195,8 @@ The final part requires that a new two level factor variable be created that ind
 
 This code section first adds an additional variable to the data set then converts it from a date to the day of the week. Once that is done then the day of the week is replaced with the identified "weekend" or "weekday" as appropriate and converted to a factor variable.  Lastly, the data is grouped by weekend or weekday and then time interval so that the total number os steps and mean number of steps can be calculated.
 
-```{r}
 
+```r
 library(lubridate)
 
 raw_data2 <- mutate(raw_data2, Day = ymd(date))
@@ -170,13 +216,12 @@ raw_data2$Day <- as.factor(raw_data2$Day)
 wkday_summary <- summarise(group_by(raw_data2, Day, interval), 
                          tot_steps = sum(steps),
                          mean_steps = mean(steps))
-
 ```
 
 Using the ggplot2 package, a panel time series plot is created showing the average number of steps taken per time interval for both weekend and weekday days.
 
-```{r}
 
+```r
 library(ggplot2)
 
 ggplot(aes(x = interval, y = mean_steps), data = wkday_summary) + 
@@ -185,5 +230,6 @@ ggplot(aes(x = interval, y = mean_steps), data = wkday_summary) +
      labs(x = "Time Interval") +
      labs(y = "Average Steps") +
      labs(title = "Weekday vs. Weekend Average Step Rates per Time Interval")
-
 ```
+
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
